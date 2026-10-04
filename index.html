@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Game Shelf</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+:root {
+  --bg: #E7ECF3;
+  --surface: #FFFFFF;
+  --ink: #1D2A44;
+  --muted: #5B6782;
+  --line: #CBD3E0;
+  --red: #E2483D;
+  --yellow: #F2B630;
+  --blue: #2F6FDB;
+  --green: #2F9E6B;
+  --chip: #F3F5F9;
+  --display: "Bricolage Grotesque", "Noto Sans TC", system-ui, sans-serif;
+  --body: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131A27; --surface: #1D2638; --ink: #E8ECF4; --muted: #9AA6BE;
+    --line: #2E3A52; --chip: #253047; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131A27; --surface: #1D2638; --ink: #E8ECF4; --muted: #9AA6BE;
+  --line: #2E3A52; --chip: #253047; color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 16px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+[hidden] { display: none !important; }
+
+/* ---------- header ---------- */
+.top { padding: 36px 0 18px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.top h1 {
+  font-family: var(--display); font-weight: 800; font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1; letter-spacing: -0.02em; margin: 0;
+}
+.top .count { color: var(--muted); margin-top: 8px; }
+.btn {
+  border: 2px solid var(--ink); background: transparent; border-radius: 999px;
+  padding: 7px 16px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn.solid { background: var(--ink); color: var(--bg); }
+.btn:hover { background: var(--ink); color: var(--bg); }
+
+/* ---------- filters ---------- */
+.filters {
+  position: sticky; top: 0; z-index: 5; background: var(--bg);
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+.frow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.frow:first-child { margin-top: 0; }
+.flabel { color: var(--muted); font-size: .9rem; min-width: 4.5em; }
+.search {
+  flex: 1 1 260px; border: 2px solid var(--line); background: var(--surface);
+  border-radius: 12px; padding: 9px 14px;
+}
+.search:focus { border-color: var(--blue); outline: none; }
+select.sort { border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 12px; }
+
+.meeples { display: flex; gap: 4px; flex-wrap: wrap; }
+.meeple {
+  position: relative; width: 44px; height: 46px; border: 0; background: none; padding: 0; cursor: pointer;
+  color: var(--line);
+}
+.meeple svg { width: 100%; height: 100%; display: block; transition: transform .15s ease; }
+.meeple span {
+  position: absolute; left: 0; right: 0; top: 52%; text-align: center;
+  font-family: var(--display); font-weight: 800; font-size: .95rem; color: var(--ink);
+}
+.meeple:hover svg { transform: translateY(-3px); }
+.meeple[aria-pressed="true"] svg { transform: translateY(-3px); }
+.meeple[aria-pressed="true"] span { color: #fff; }
+
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px;
+  padding: 4px 12px; font-size: .9rem; cursor: pointer;
+}
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.clear { border: 0; background: none; color: var(--blue); text-decoration: underline; cursor: pointer; padding: 4px; }
+
+/* ---------- shelf ---------- */
+.shelf {
+  display: grid; gap: 22px; padding: 26px 0 60px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+}
+.card {
+  background: var(--surface); border-radius: 14px; overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 1px 0 var(--line), 0 6px 0 -2px var(--line);
+}
+.cover { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--chip); }
+.cover .blur {
+  position: absolute; inset: -20px; background-size: cover; background-position: center;
+  filter: blur(18px) saturate(1.2); opacity: .55;
+}
+.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+.cover .ph {
+  position: absolute; inset: 0; display: grid; place-items: center; color: #fff;
+  font-family: var(--display); font-weight: 800; font-size: 4.5rem;
+}
+.info { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.info h2 { font-family: var(--display); font-size: 1.2rem; line-height: 1.2; margin: 0; font-weight: 700; }
+.desc { color: var(--muted); font-size: .9rem; white-space: pre-line; margin: 0; }
+.stats { display: flex; gap: 14px; font-size: .9rem; font-weight: 500; flex-wrap: wrap; }
+.stats span { display: inline-flex; align-items: center; gap: 5px; }
+.stats svg { width: 16px; height: 16px; }
+.tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: auto; padding-top: 6px; }
+.tag { background: var(--chip); border-radius: 6px; padding: 1px 8px; font-size: .8rem; }
+.bgg { font-size: .8rem; color: var(--blue); align-self: flex-start; }
+
+.empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--muted); }
+.notice {
+  max-width: 640px; margin: 60px auto; background: var(--surface); border-radius: 16px; padding: 28px;
+  border-left: 6px solid var(--red);
+}
+.notice h2 { font-family: var(--display); margin-top: 0; }
+
+/* ---------- setup page ---------- */
+.setup { max-width: 760px; margin: 0 auto; padding: 48px 20px 80px; }
+.setup h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 6vw, 3.8rem); line-height: 1; letter-spacing: -0.025em; margin: 0 0 16px; }
+.setup .lede { font-size: 1.1rem; color: var(--muted); max-width: 60ch; }
+.steps { padding-left: 1.4em; margin: 28px 0; }
+.steps li { margin-bottom: 12px; padding-left: 4px; }
+.steps code, .cols code { background: var(--chip); padding: 1px 6px; border-radius: 5px; font-size: .9em; }
+.panel { background: var(--surface); border-radius: 16px; padding: 22px; margin-top: 24px; }
+.panel label { font-weight: 700; display: block; margin-bottom: 8px; }
+.panel input[type=text] { width: 100%; border: 2px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px; }
+.panel input[type=text]:focus { border-color: var(--blue); outline: none; }
+.panel .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.result { margin-top: 18px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.result .qr svg { width: 140px; height: 140px; background: #fff; border-radius: 8px; display: block; }
+.result .link { flex: 1 1 260px; word-break: break-all; font-size: .9rem; }
+.err { color: var(--red); margin-top: 10px; }
+.cols { overflow-x: auto; margin-top: 18px; }
+.cols table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+.cols th, .cols td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cols th { font-family: var(--display); }
+
+dialog { border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); padding: 24px; max-width: 92vw; text-align: center; }
+dialog::backdrop { background: rgba(10, 15, 30, .55); }
+dialog .qr svg { width: 220px; height: 220px; background: #fff; border-radius: 8px; }
+dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-width: 320px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="meeple" viewBox="0 0 24 24"><path fill="currentColor" d="M12 1.8a3.4 3.4 0 0 1 3.4 3.4c0 1-.4 1.8-1 2.4 3.4.5 7.6 1.7 7.6 3.8 0 1.3-1.7 1.8-3.8 1.8-.9 0-1.4.6-1 1.4l2.5 5.4c.4.9-.2 1.8-1.2 1.8h-3.3c-.6 0-1.1-.3-1.4-.9L12 16.8l-1.8 4.1c-.3.6-.8.9-1.4.9H5.5c-1 0-1.6-.9-1.2-1.8l2.5-5.4c.4-.8-.1-1.4-1-1.4-2.1 0-3.8-.5-3.8-1.8 0-2.1 4.2-3.3 7.6-3.8-.6-.6-1-1.4-1-2.4A3.4 3.4 0 0 1 12 1.8z"/></symbol>
+  <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+</svg>
+
+<!-- ============ SHELF VIEW ============ -->
+<div id="shelfView" hidden>
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <h1 id="title">Our game shelf</h1>
+        <div class="count" id="count"></div>
+      </div>
+      <button class="btn" id="shareBtn" type="button">Share / QR code</button>
+    </header>
+  </div>
+  <div class="filters">
+    <div class="wrap">
+      <div class="frow">
+        <input class="search" id="search" type="search" placeholder="Search games or notes" aria-label="Search games">
+        <select class="sort" id="sort" aria-label="Sort games">
+          <option value="sheet">Sheet order</option>
+          <option value="name">Name</option>
+          <option value="short">Shortest first</option>
+          <option value="long">Longest first</option>
+        </select>
+      </div>
+      <div class="frow" id="playerRow"><span class="flabel">Players</span><div class="meeples" id="players"></div></div>
+      <div class="frow" id="timeRow"><span class="flabel">Time</span><div class="chips" id="times"></div></div>
+      <div class="frow" id="typeRow"><span class="flabel">Type</span><div class="chips" id="types"></div></div>
+      <div class="frow"><button class="clear" id="clearBtn" type="button" hidden>Clear all filters</button></div>
+    </div>
+  </div>
+  <main class="wrap"><div class="shelf" id="shelf"></div></main>
+</div>
+
+<!-- ============ STATUS (loading / error) ============ -->
+<div id="statusView" class="wrap" hidden></div>
+
+<!-- ============ SETUP VIEW ============ -->
+<main id="setupView" class="setup" hidden>
+  <h1>Turn a Google Sheet into a game shelf</h1>
+  <p class="lede">List your board games in a spreadsheet, paste its link here, and get a page your friends can filter by player count, play time, and type before game night.</p>
+
+  <ol class="steps">
+    <li>Make a Google Sheet. Put column names in row 1 (see the table below). Only <code>NAME</code> is required.</li>
+    <li>In Google Sheets, choose <b>File → Share → Publish to web</b>, pick <b>Entire document</b> and <b>Comma-separated values (.csv)</b>, then press Publish. Copy the link it gives you.<br><small>Or instead: Share → General access → “Anyone with the link” can view, and copy the normal sheet link.</small></li>
+    <li>Paste the link below to get your shelf’s address.</li>
+  </ol>
+
+  <div class="panel">
+    <label for="sheetInput">Your Google Sheet link</label>
+    <input id="sheetInput" type="text" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-…/pub?output=csv" autocomplete="off">
+    <label for="titleInput" style="margin-top:14px">Shelf title (optional)</label>
+    <input id="titleInput" type="text" placeholder="Kevin’s games">
+    <div class="row">
+      <button class="btn solid" id="makeBtn" type="button">Make my shelf link</button>
+      <button class="btn" id="demoBtn" type="button">Try the sample shelf</button>
+      <button class="btn" id="templateBtn" type="button">Download a starter CSV</button>
+    </div>
+    <div class="err" id="setupErr" role="alert"></div>
+    <div class="result" id="setupResult" hidden>
+      <div class="qr" id="setupQr"></div>
+      <div class="link">
+        <div id="setupLink"></div>
+        <div class="row">
+          <a class="btn solid" id="openLink" href="#">Open my shelf</a>
+          <button class="btn" id="copyLink" type="button">Copy link</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cols">
+    <table>
+      <thead><tr><th>Column</th><th>What to put in it</th></tr></thead>
+      <tbody>
+        <tr><td><code>NAME</code></td><td>Game name. Required. (Also accepted: 名稱)</td></tr>
+        <tr><td><code>IMAGE</code></td><td>Any picture link from any website: BGG, Imgur, Google Drive, Dropbox, GitHub, a shop page’s image… Drive, Dropbox and Imgur page links are converted automatically. (Also accepted: IMG, IMGUR, 圖片)</td></tr>
+        <tr><td><code>BGGID</code></td><td>The number in the BoardGameGeek address, e.g. 128882 for Avalon. Adds a link to the game’s BGG page.</td></tr>
+        <tr><td><code>PLAYER</code></td><td><code>2-5</code>, <code>2~5</code>, <code>4</code>, <code>2,4,6</code> or <code>3+</code> (人數)</td></tr>
+        <tr><td><code>PLAYTIME</code></td><td>Minutes: <code>30-60</code>, <code>45</code>, or hours like <code>2h</code> (時間)</td></tr>
+        <tr><td><code>GAMETYPE</code></td><td>Types separated by 、 or commas: <code>派對、推理</code> (類型)</td></tr>
+        <tr><td><code>DESCRIPTION</code></td><td>A note shown under the name (備註)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="lede" style="font-size:.95rem;margin-top:24px">Commas inside cells are fine. Google caches published sheets, so edits can take about 5 minutes to appear.</p>
+</main>
+
+<dialog id="shareDialog">
+  <div class="qr" id="shareQr"></div>
+  <p id="shareUrl"></p>
+  <div class="row" style="display:flex;gap:10px;justify-content:center">
+    <button class="btn solid" id="shareCopy" type="button">Copy link</button>
+    <button class="btn" type="button" onclick="this.closest('dialog').close()">Close</button>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  const COLORS = ["#E2483D", "#F2B630", "#2F6FDB", "#2F9E6B", "#8E5BD6", "#E07A2F"];
+
+  /* ---------------- sheet link handling ---------------- */
+
+  // Turns whatever the user pasted into short URL parameters.
+  function parseSheetInput(raw) {
+    const s = (raw || "").trim();
+    if (!s) return null;
+    const gidMatch = s.match(/[#&?]gid=(\d+)/);
+    const gid = gidMatch ? gidMatch[1] : "";
+    let m = s.match(/\/spreadsheets\/d\/e\/([\w-]+)/);
+    if (m) return { pub: m[1], gid };
+    m = s.match(/\/spreadsheets\/d\/([\w-]+)/);
+    if (m) return { sheet: m[1], gid };
+    if (/^2PACX-[\w-]+$/.test(s)) return { pub: s, gid };
+    if (/^[\w-]{25,}$/.test(s)) return { sheet: s, gid };
+    if (/^https?:\/\//i.test(s)) return { url: s };
+    return null;
+  }
+
+  function csvUrlFromParams(p) {
+    const gid = p.get("gid");
+    const pub = p.get("pub") || p.get("csv"); // "csv" kept for links made by the old site
+    if (pub) return `https://docs.google.com/spreadsheets/d/e/${encodeURIComponent(pub)}/pub?output=csv${gid ? "&gid=" + gid : ""}`;
+    const sheet = p.get("sheet");
+    if (sheet) return `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheet)}/gviz/tq?tqx=out:csv${gid ? "&gid=" + gid : ""}`;
+    const url = p.get("url");
+    if (url) return url;
+    return null;
+  }
+
+  function shelfLink(info, title) {
+    const p = new URLSearchParams();
+    if (info.pub) p.set("pub", info.pub);
+    if (info.sheet) p.set("sheet", info.sheet);
+    if (info.url) p.set("url", info.url);
+    if (info.gid) p.set("gid", info.gid);
+    if (title) p.set("title", title);
+    return location.origin + location.pathname + "?" + p.toString();
+  }
+
+  /* ---------------- image links from any website ---------------- */
+
+  function normalizeImage(raw) {
+    let s = (raw || "").trim();
+    if (!s) return "";
+    if (/^[a-zA-Z0-9]{5,8}$/.test(s)) return `https://i.imgur.com/${s}.jpg`; // old IMGUR-id style
+    if (s.startsWith("//")) s = "https:" + s;
+    if (!/^https?:\/\//i.test(s) && /^[\w-]+(\.[\w-]+)+\//.test(s)) s = "https://" + s;
+    let m;
+    // imgur page link -> direct image
+    if ((m = s.match(/^https?:\/\/(?:m\.)?imgur\.com\/([a-zA-Z0-9]{5,8})(?:\.\w+)?\/?$/))) return `https://i.imgur.com/${m[1]}.jpg`;
+    // Google Drive share link -> direct image
+    if ((m = s.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:export=\w+&)?id=|thumbnail\?id=)([\w-]+)/))) return `https://lh3.googleusercontent.com/d/${m[1]}`;
+    // Dropbox share link -> raw file
+    if (/dropbox\.com\//.test(s)) {
+      s = s.replace(/([?&])dl=0/, "$1raw=1");
+      if (!/[?&](raw|dl)=1/.test(s)) s += (s.includes("?") ? "&" : "?") + "raw=1";
+      return s;
+    }
+    // GitHub file page -> raw file
+    if ((m = s.match(/^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/))) return `https://raw.githubusercontent.com/${m[1]}/${m[2]}/${m[3]}`;
+    return s;
+  }
+
+  /* ---------------- parsing cells ---------------- */
+
+  const ALIASES = {
+    name: ["name", "title", "game", "名稱", "遊戲", "遊戲名稱", "桌遊", "桌遊名稱"],
+    image: ["image", "img", "imgur", "picture", "photo", "imageurl", "pic", "圖片", "圖", "圖片網址"],
+    bgg: ["bggid", "bgg", "bggnumber"],
+    players: ["player", "players", "人數", "遊戲人數", "玩家人數"],
+    time: ["playtime", "time", "duration", "時間", "遊戲時間"],
+    type: ["gametype", "type", "types", "category", "tags", "類型", "分類", "種類"],
+    desc: ["description", "desc", "note", "notes", "備註", "說明", "描述"]
+  };
+
+  function mapHeaders(headers) {
+    const map = {};
+    headers.forEach((h) => {
+      const key = String(h || "").toLowerCase().replace(/[\s_\-.]/g, "");
+      for (const field in ALIASES) {
+        if (!(field in map) && ALIASES[field].includes(key)) map[field] = h;
+      }
+    });
+    return map;
+  }
+
+  function toAscii(s) {
+    return String(s || "")
+      .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+      .replace(/[～〜~–—－至到]/g, "-")
+      .replace(/[＋]/g, "+");
+  }
+
+  function parsePlayers(raw) {
+    const out = new Set();
+    toAscii(raw).split(/[,，、\/;]+/).forEach((part) => {
+      let m;
+      if ((m = part.match(/(\d+)\s*-\s*(\d+)/))) {
+        const a = +m[1], b = +m[2];
+        for (let i = Math.min(a, b); i <= Math.min(Math.max(a, b), 30); i++) out.add(i);
+      } else if ((m = part.match(/(\d+)\s*\+/))) {
+        for (let i = +m[1]; i <= Math.max(+m[1], 10); i++) out.add(i);
+      } else if ((m = part.match(/(\d+)/))) {
+        out.add(+m[1]);
+      }
+    });
+    return [...out].sort((a, b) => a - b);
+  }
+
+  function parseTime(raw) {
+    const s = toAscii(raw).toLowerCase();
+    const nums = (s.match(/\d+(\.\d+)?/g) || []).map(Number);
+    if (!nums.length) return null;
+    const hours = /(h|hr|hour|小時)/.test(s) && !/(m|min|分)/.test(s);
+    const mins = nums.map((n) => (hours ? n * 60 : n));
+    let a = mins[0], b = mins.length > 1 ? mins[1] : mins[0];
+    if (/\+/.test(s) && mins.length === 1) b = a * 1.5;
+    return [Math.min(a, b), Math.max(a, b)];
+  }
+
+  function formatPlayers(list) {
+    if (!list.length) return "";
+    const runs = [];
+    let start = list[0], prev = list[0];
+    for (let i = 1; i <= list.length; i++) {
+      if (list[i] === prev + 1) { prev = list[i]; continue; }
+      runs.push(start === prev ? `${start}` : `${start}–${prev}`);
+      start = prev = list[i];
+    }
+    return runs.join(", ");
+  }
+
+  function formatTime(t) {
+    if (!t) return "";
+    return t[0] === t[1] ? `${t[0]} min` : `${t[0]}–${Math.round(t[1])} min`;
+  }
+
+  function rowsToGames(rows, fields) {
+    return rows.map((r, i) => {
+      const get = (f) => (fields[f] ? String(r[fields[f]] ?? "").trim() : "");
+      const name = get("name");
+      if (!name) return null;
+      const bgg = get("bgg").replace(/\D/g, "");
+      return {
+        order: i,
+        name,
+        image: normalizeImage(get("image")),
+        bgg,
+        players: parsePlayers(get("players")),
+        playersRaw: get("players"),
+        time: parseTime(get("time")),
+        types: get("type").split(/[、,，\/;；|]+/).map((t) => t.trim()).filter(Boolean),
+        desc: get("desc")
+      };
+    }).filter(Boolean);
+  }
+
+  /* ---------------- filters + rendering ---------------- */
+
+  const TIME_BUCKETS = [
+    { label: "Under 15 min", a: 0, b: 14 },
+    { label: "15–30 min", a: 15, b: 29 },
+    { label: "30–45 min", a: 30, b: 44 },
+    { label: "45–60 min", a: 45, b: 60 },
+    { label: "1–1½ h", a: 61, b: 90 },
+    { label: "1½–2 h", a: 91, b: 120 },
+    { label: "Over 2 h", a: 121, b: 99999 }
+  ];
+
+  const state = { games: [], player: null, times: new Set(), types: new Set(), q: "", sort: "sheet" };
+
+  function el(tag, attrs, ...kids) {
+    const n = document.createElement(tag);
+    for (const k in attrs || {}) {
+      if (k === "class") n.className = attrs[k];
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), attrs[k]);
+      else n.setAttribute(k, attrs[k]);
+    }
+    kids.flat().forEach((c) => c != null && n.append(c));
+    return n;
+  }
+
+  function svgUse(id) {
+    const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    s.setAttribute("aria-hidden", "true");
+    const u = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    u.setAttribute("href", "#" + id);
+    s.append(u);
+    return s;
+  }
+
+  function colorFor(name) {
+    let h = 0;
+    for (const c of name) h = (h * 31 + c.codePointAt(0)) >>> 0;
+    return COLORS[h % COLORS.length];
+  }
+
+  function placeholder(g) {
+    const ph = el("div", { class: "ph" }, [...g.name][0].toUpperCase());
+    ph.style.background = colorFor(g.name);
+    return ph;
+  }
+
+  function buildFilters() {
+    const g = state.games;
+    // players
+    const all = new Set(g.flatMap((x) => x.players));
+    const players = $("players");
+    players.innerHTML = "";
+    if (!all.size) $("playerRow").hidden = true;
+    else {
+      const lo = Math.min(...all), hi = Math.min(Math.max(...all), 12);
+      for (let n = lo; n <= hi; n++) {
+        const b = el("button", { class: "meeple", type: "button", "aria-pressed": "false", "aria-label": `${n} players` }, svgUse("meeple"), el("span", {}, String(n)));
+        b.style.setProperty("--c", COLORS[(n - 1) % 4]);
+        b.addEventListener("click", () => {
+          state.player = state.player === n ? null : n;
+          refreshPressed(); render();
+        });
+        b.dataset.n = n;
+        players.append(b);
+      }
+    }
+    // time
+    const times = $("times");
+    times.innerHTML = "";
+    const used = TIME_BUCKETS.filter((t) => g.some((x) => x.time && x.time[0] <= t.b && x.time[1] >= t.a));
+    $("timeRow").hidden = !used.length;
+    used.forEach((t) => times.append(toggleChip(t.label, state.times)));
+    // types
+    const types = $("types");
+    types.innerHTML = "";
+    const counts = {};
+    g.forEach((x) => x.types.forEach((t) => (counts[t] = (counts[t] || 0) + 1)));
+    const typeList = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+    $("typeRow").hidden = !typeList.length;
+    typeList.forEach((t) => types.append(toggleChip(t, state.types)));
+  }
+
+  function toggleChip(label, set) {
+    const b = el("button", { class: "chip", type: "button", "aria-pressed": "false" }, label);
+    b.addEventListener("click", () => {
+      set.has(label) ? set.delete(label) : set.add(label);
+      b.setAttribute("aria-pressed", set.has(label));
+      render();
+    });
+    return b;
+  }
+
+  function refreshPressed() {
+    document.querySelectorAll(".meeple").forEach((b) => {
+      const on = +b.dataset.n === state.player;
+      b.setAttribute("aria-pressed", on);
+      b.style.color = on ? b.style.getPropertyValue("--c") : "";
+    });
+  }
+
+  function matches(g) {
+    if (state.player && !g.players.includes(state.player)) return false;
+    if (state.times.size) {
+      const ok = TIME_BUCKETS.some((t) => state.times.has(t.label) && g.time && g.time[0] <= t.b && g.time[1] >= t.a);
+      if (!ok) return false;
+    }
+    if (state.types.size && !g.types.some((t) => state.types.has(t))) return false;
+    if (state.q) {
+      const hay = (g.name + " " + g.desc + " " + g.types.join(" ")).toLowerCase();
+      if (!hay.includes(state.q)) return false;
+    }
+    return true;
+  }
+
+  function sorted(list) {
+    const l = list.slice();
+    const tmin = (g) => (g.time ? g.time[0] : 1e9);
+    const tmax = (g) => (g.time ? g.time[1] : -1);
+    if (state.sort === "name") l.sort((a, b) => a.name.localeCompare(b.name, "zh-Hant"));
+    if (state.sort === "short") l.sort((a, b) => tmin(a) - tmin(b));
+    if (state.sort === "long") l.sort((a, b) => tmax(b) - tmax(a));
+    return l;
+  }
+
+  function card(g) {
+    const cover = el("div", { class: "cover" });
+    if (g.image) {
+      const blur = el("div", { class: "blur" });
+      blur.style.backgroundImage = `url("${g.image.replace(/"/g, "%22")}")`;
+      const img = el("img", { src: g.image, alt: g.name, loading: "lazy", referrerpolicy: "no-referrer" });
+      img.addEventListener("error", () => { cover.innerHTML = ""; cover.append(placeholder(g)); });
+      cover.append(blur, img);
+    } else {
+      cover.append(placeholder(g));
+    }
+    const stats = el("div", { class: "stats" });
+    if (g.players.length) stats.append(el("span", {}, svgUse("meeple"), formatPlayers(g.players)));
+    if (g.time) stats.append(el("span", {}, svgUse("clock"), formatTime(g.time)));
+    const info = el("div", { class: "info" },
+      el("h2", {}, g.name),
+      g.desc ? el("p", { class: "desc" }, g.desc) : null,
+      stats.childNodes.length ? stats : null,
+      g.types.length ? el("div", { class: "tags" }, g.types.map((t) => el("span", { class: "tag" }, t))) : null,
+      g.bgg ? el("a", { class: "bgg", href: `https://boardgamegeek.com/boardgame/${g.bgg}`, target: "_blank", rel: "noopener" }, "View on BoardGameGeek") : null
+    );
+    return el("article", { class: "card" }, cover, info);
+  }
+
+  function render() {
+    const list = sorted(state.games.filter(matches));
+    const shelf = $("shelf");
+    shelf.innerHTML = "";
+    if (!list.length) shelf.append(el("div", { class: "empty" }, "No games match these filters. Try removing one."));
+    list.forEach((g) => shelf.append(card(g)));
+    const total = state.games.length;
+    $("count").textContent = list.length === total ? `${total} games` : `${list.length} of ${total} games`;
+    $("clearBtn").hidden = !(state.player || state.times.size || state.types.size || state.q);
+  }
+
+  /* ---------------- QR + share ---------------- */
+
+  function qrSvg(text, cell) {
+    try {
+      const q = qrcode(0, "M");
+      q.addData(text);
+      q.make();
+      return q.createSvgTag({ cellSize: cell || 4, margin: 2, scalable: true });
+    } catch (e) { return ""; }
+  }
+
+  function copy(text, btn) {
+    const done = () => { const o = btn.textContent; btn.textContent = "Copied"; setTimeout(() => (btn.textContent = o), 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => prompt("Copy this link:", text));
+    else prompt("Copy this link:", text);
+  }
+
+  /* ---------------- boot ---------------- */
+
+  function showStatus(html) {
+    $("statusView").innerHTML = html;
+    $("statusView").hidden = false;
+  }
+
+  function startShelf(games, title) {
+    state.games = games;
+    document.title = title;
+    $("title").textContent = title;
+    $("statusView").hidden = true;
+    $("shelfView").hidden = false;
+    buildFilters();
+    render();
+
+    $("search").addEventListener("input", (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
+    $("sort").addEventListener("change", (e) => { state.sort = e.target.value; render(); });
+    $("clearBtn").addEventListener("click", () => {
+      state.player = null; state.times.clear(); state.types.clear(); state.q = "";
+      $("search").value = "";
+      document.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
+      refreshPressed(); render();
+    });
+    $("shareBtn").addEventListener("click", () => {
+      $("shareQr").innerHTML = qrSvg(location.href, 6);
+      $("shareUrl").textContent = location.href;
+      $("shareDialog").showModal();
+    });
+    $("shareCopy").addEventListener("click", (e) => copy(location.href, e.target));
+  }
+
+  function loadSheet(url, title) {
+    showStatus('<p class="empty">Loading your games…</p>');
+    Papa.parse(url, {
+      download: true,
+      header: true,
+      skipEmptyLines: "greedy",
+      complete: (res) => {
+        const fields = mapHeaders(res.meta.fields || []);
+        if (!fields.name) {
+          const looksLikeHtml = (res.meta.fields || []).some((f) => /<!doctype|<html/i.test(f));
+          return showError(looksLikeHtml
+            ? "Google returned a sign-in page instead of the data, so the sheet isn’t public yet."
+            : `Couldn’t find a NAME column. Row 1 has: ${(res.meta.fields || []).join(", ") || "nothing"}.`);
+        }
+        const games = rowsToGames(res.data, fields);
+        if (!games.length) return showError("The sheet has a NAME column but no games in it yet.");
+        startShelf(games, title);
+      },
+      error: () => showError("The sheet couldn’t be downloaded. It may not be published, or the link may be wrong.")
+    });
+  }
+
+  function showError(msg) {
+    const n = el("div", { class: "notice" },
+      el("h2", {}, "This shelf can’t load"),
+      el("p", {}, msg),
+      el("p", {}, "In Google Sheets, use File → Share → Publish to web (Entire document, CSV), or set General access to “Anyone with the link can view”. Then make a new link here."),
+      el("a", { class: "btn solid", href: location.pathname }, "Go to setup")
+    );
+    $("statusView").innerHTML = "";
+    $("statusView").append(n);
+    $("statusView").hidden = false;
+  }
+
+  const SAMPLE = `NAME,IMAGE,BGGID,PLAYER,PLAYTIME,GAMETYPE,DESCRIPTION
+阿瓦隆 Avalon,,128882,5-10,30,陣營、推理、派對,"Hidden roles, best with 7+"
+Codenames,,178900,2-8,15,派對、文字,Teams of two or more
+卡卡頌 Carcassonne,,822,2-5,30-45,拼放、家庭,
+Splendor,,148228,2-4,30,引擎、家庭,Quick to teach
+Wingspan,,266192,1-5,40-70,引擎、策略,"Birds, eggs, and very pretty cards"
+The Crew,,284083,2-5,20,合作、吃墩,
+Dixit,,39856,3-8,30,派對、聯想,
+Terraforming Mars,,167791,1-5,2h,策略、引擎,Takes a full evening`;
+
+  function initSetup() {
+    $("setupView").hidden = false;
+    $("makeBtn").addEventListener("click", () => {
+      $("setupErr").textContent = "";
+      const info = parseSheetInput($("sheetInput").value);
+      if (!info) { $("setupErr").textContent = "That doesn’t look like a Google Sheet link. Paste the link from Publish to web, or the sheet’s address bar."; return; }
+      const link = shelfLink(info, $("titleInput").value.trim());
+      $("setupLink").textContent = link;
+      $("openLink").href = link;
+      $("setupQr").innerHTML = qrSvg(link, 4);
+      $("setupResult").hidden = false;
+    });
+    $("copyLink").addEventListener("click", (e) => copy($("openLink").href, e.target));
+    $("demoBtn").addEventListener("click", () => {
+      $("setupView").hidden = true;
+      const res = Papa.parse(SAMPLE, { header: true, skipEmptyLines: true });
+      startShelf(rowsToGames(res.data, mapHeaders(res.meta.fields)), "Sample shelf");
+    });
+    $("templateBtn").addEventListener("click", () => {
+      const blob = new Blob(["\uFEFF" + SAMPLE], { type: "text/csv;charset=utf-8" });
+      const a = el("a", { href: URL.createObjectURL(blob), download: "game-shelf-template.csv" });
+      document.body.append(a); a.click(); a.remove();
+    });
+  }
+
+  const csvUrl = csvUrlFromParams(params);
+  if (csvUrl) loadSheet(csvUrl, params.get("title") || "Our game shelf");
+  else initSetup();
+})();
+</script>
+</body>
+</html>
