@@ -67,61 +67,44 @@ button, input, select { font: inherit; color: inherit; }
 .btn:hover { background: var(--ink); color: var(--bg); }
 
 /* ---------- filters ---------- */
-.filters {
-  position: sticky; top: 0; z-index: 5; background: var(--bg);
-  padding: calc(env(safe-area-inset-top, 0px) + 12px) 0 14px;
-  border-bottom: 1px solid var(--line);
-}
-.frow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.filters { padding: 4px 0 14px; border-bottom: 1px solid var(--line); }
+.frow { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 .frow:first-child { margin-top: 0; }
-.flabel { color: var(--muted); font-size: .9rem; min-width: 4.5em; }
-.search {
-  flex: 1 1 260px; border: 2px solid var(--line); background: var(--surface);
-  border-radius: 12px; padding: 9px 14px;
-}
-.search:focus { border-color: var(--blue); outline: none; }
-select.sort { border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 12px; }
+.flabel { color: var(--muted); font-size: .8rem; }
 
-.meeples { display: flex; gap: 4px; flex-wrap: wrap; }
+.meeples { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; }
 .meeple {
-  position: relative; width: 44px; height: 46px; border: 0; background: none; padding: 0; cursor: pointer;
+  position: relative; width: 30px; height: 32px; border: 0; background: none; padding: 0; cursor: pointer;
   color: var(--line);
 }
 .meeple svg { width: 100%; height: 100%; display: block; transition: transform .15s ease; }
 .meeple span {
   position: absolute; left: 0; right: 0; top: 52%; text-align: center;
-  font-family: var(--display); font-weight: 800; font-size: .95rem; color: var(--ink);
+  font-family: var(--display); font-weight: 700; font-size: .72rem; color: var(--ink);
 }
 .meeple:hover svg { transform: translateY(-3px); }
 .meeple[aria-pressed="true"] svg { transform: translateY(-3px); }
 .meeple[aria-pressed="true"] span { color: #fff; }
 
-.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
 .chip {
   border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px;
-  padding: 4px 12px; font-size: .9rem; cursor: pointer;
+  padding: 1px 10px; font-size: .8rem; cursor: pointer;
 }
 .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 .clear { border: 0; background: none; color: var(--blue); text-decoration: underline; cursor: pointer; padding: 4px; }
 
 /* ---------- shelf ---------- */
-.shelf {
-  display: grid; gap: 22px; padding: 26px 0 60px;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
-}
+.shelf { columns: 230px; column-gap: 20px; padding: 24px 0 60px; }
 .card {
   background: var(--surface); border-radius: 14px; overflow: hidden;
-  display: flex; flex-direction: column;
+  display: flex; flex-direction: column; break-inside: avoid; margin-bottom: 20px;
   box-shadow: 0 1px 0 var(--line), 0 6px 0 -2px var(--line);
 }
-.cover { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--chip); }
-.cover .blur {
-  position: absolute; inset: -20px; background-size: cover; background-position: center;
-  filter: blur(18px) saturate(1.2); opacity: .55;
-}
-.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 10px; }
+.cover { position: relative; background: var(--chip); }
+.cover img { display: block; width: 100%; height: auto; }
 .cover .ph {
-  position: absolute; inset: 0; display: grid; place-items: center; color: #fff;
+  aspect-ratio: 4 / 3; display: grid; place-items: center; color: #fff;
   font-family: var(--display); font-weight: 800; font-size: 4.5rem;
 }
 .info { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
@@ -135,10 +118,10 @@ select.sort { border: 2px solid var(--line); background: var(--surface); border-
 .badge {
   position: absolute; top: 10px; left: 10px; display: flex; gap: 4px; flex-wrap: wrap; z-index: 1;
 }
-.badge span { background: var(--red); color: #fff; font-weight: 700; font-size: .78rem; border-radius: 6px; padding: 2px 8px; }
+.badge span { background: var(--red); color: #fff; font-weight: 700; font-size: .78rem; border-radius: 6px; padding: 2px 8px; box-shadow: 0 0 0 2px #fff; }
 .bgg { font-size: .8rem; color: var(--blue); align-self: flex-start; }
 
-.empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty { column-span: all; text-align: center; padding: 60px 20px; color: var(--muted); }
 .notice {
   max-width: 640px; margin: 60px auto; background: var(--surface); border-radius: 16px; padding: 28px;
   border-left: 6px solid var(--red);
@@ -194,15 +177,6 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
   </div>
   <div class="filters">
     <div class="wrap">
-      <div class="frow">
-        <input class="search" id="search" type="search" placeholder="Search games or notes" aria-label="Search games">
-        <select class="sort" id="sort" aria-label="Sort games">
-          <option value="sheet">Sheet order</option>
-          <option value="name">Name</option>
-          <option value="short">Shortest first</option>
-          <option value="long">Longest first</option>
-        </select>
-      </div>
       <div class="frow" id="playerRow"><span class="flabel">Players</span><div class="meeples" id="players"></div></div>
       <div class="frow" id="timeRow"><span class="flabel">Time</span><div class="chips" id="times"></div></div>
       <div class="frow" id="typeRow"><span class="flabel">Type</span><div class="chips" id="types"></div></div>
@@ -570,11 +544,9 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
   function card(g) {
     const cover = el("div", { class: "cover" });
     if (g.image) {
-      const blur = el("div", { class: "blur" });
-      blur.style.backgroundImage = `url("${g.image.replace(/"/g, "%22")}")`;
       const img = el("img", { src: g.image, alt: g.name, loading: "lazy", referrerpolicy: "no-referrer" });
-      img.addEventListener("error", () => { blur.remove(); img.replaceWith(placeholder(g)); });
-      cover.append(blur, img);
+      img.addEventListener("error", () => img.replaceWith(placeholder(g)));
+      cover.append(img);
     } else {
       cover.append(placeholder(g));
     }
@@ -586,8 +558,7 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
       el("h2", {}, g.name),
       g.desc ? el("p", { class: "desc" }, g.desc) : null,
       stats.childNodes.length ? stats : null,
-      g.types.length ? el("div", { class: "tags" }, g.types.map((t) => el("span", { class: "tag" }, t))) : null,
-      g.bgg ? el("a", { class: "bgg", href: `https://boardgamegeek.com/boardgame/${g.bgg}`, target: "_blank", rel: "noopener" }, "View on BoardGameGeek") : null
+      g.types.length ? el("div", { class: "tags" }, g.types.map((t) => el("span", { class: "tag" }, t))) : null
     );
     return el("article", { class: "card" }, cover, info);
   }
@@ -636,11 +607,8 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
     buildFilters();
     render();
 
-    $("search").addEventListener("input", (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
-    $("sort").addEventListener("change", (e) => { state.sort = e.target.value; render(); });
     $("clearBtn").addEventListener("click", () => {
       state.player = null; state.times.clear(); state.types.clear(); state.tags.clear(); state.q = "";
-      $("search").value = "";
       document.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
       refreshPressed(); render();
     });
