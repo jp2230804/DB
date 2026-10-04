@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Game Shelf</title>
+<title>Board Game Library Creator</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <style>
@@ -22,8 +22,8 @@
   --blue: #2F6FDB;
   --green: #2F9E6B;
   --chip: #F3F5F9;
-  --display: "Bricolage Grotesque", "Noto Sans TC", system-ui, sans-serif;
-  --body: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --display: Calibri, Carlito, "Noto Sans TC", system-ui, sans-serif;
+  --body: Calibri, Carlito, "Noto Sans TC", system-ui, sans-serif;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -55,8 +55,8 @@ button, input, select { font: inherit; color: inherit; }
 /* ---------- header ---------- */
 .top { padding: 36px 0 18px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .top h1 {
-  font-family: var(--display); font-weight: 800; font-size: clamp(2rem, 5vw, 3.4rem);
-  line-height: 1; letter-spacing: -0.02em; margin: 0;
+  font-family: Calibri, Carlito, "Noto Sans TC", sans-serif; font-weight: 700; font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.1; margin: 0;
 }
 .top .count { color: var(--muted); margin-top: 8px; }
 .btn {
@@ -218,18 +218,17 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
 
 <!-- ============ SETUP VIEW ============ -->
 <main id="setupView" class="setup" hidden>
-  <h1>Turn a Google Sheet into a game shelf</h1>
-  <p class="lede">List your board games in a spreadsheet, paste its link here, and get a page your friends can filter by player count, play time, and type before game night.</p>
+  <h1>Board Game Library Creator</h1>
 
   <p class="steps">In Google Sheets, go to <b>File → Share → Publish to web</b>, choose <b>Comma-separated values (.csv)</b>, press Publish, and paste the link below.</p>
 
   <div class="panel">
     <label for="sheetInput">Your Google Sheet link</label>
     <input id="sheetInput" type="text" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv" autocomplete="off">
-    <label for="titleInput" style="margin-top:14px">Shelf title (optional)</label>
-    <input id="titleInput" type="text" placeholder="Kevin's games">
+    <label for="titleInput" style="margin-top:14px">Website title (optional)</label>
+    <input id="titleInput" type="text" placeholder="顏老闆's 桌遊">
     <div class="row">
-      <button class="btn solid" id="makeBtn" type="button">Make my shelf link</button>
+      <button class="btn solid" id="makeBtn" type="button">Generate website</button>
     </div>
     <div class="err" id="setupErr" role="alert"></div>
     <div class="result" id="setupResult" hidden>
