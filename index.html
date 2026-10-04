@@ -53,21 +53,21 @@ button, input, select { font: inherit; color: inherit; }
 [hidden] { display: none !important; }
 
 /* ---------- header ---------- */
-.top { padding: 36px 0 18px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.top { padding: 14px 0 8px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .top h1 {
-  font-family: Calibri, Carlito, "Noto Sans TC", sans-serif; font-weight: 700; font-size: clamp(2rem, 5vw, 3.4rem);
+  font-family: Calibri, Carlito, "Noto Sans TC", sans-serif; font-weight: 700; font-size: clamp(1.4rem, 3vw, 1.9rem);
   line-height: 1.1; margin: 0;
 }
-.top .count { color: var(--muted); margin-top: 8px; }
 .btn {
   border: 2px solid var(--ink); background: transparent; border-radius: 999px;
   padding: 7px 16px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
 }
+.btn.small { padding: 3px 12px; font-size: .85rem; border-width: 1.5px; }
 .btn.solid { background: var(--ink); color: var(--bg); }
 .btn:hover { background: var(--ink); color: var(--bg); }
 
 /* ---------- filters ---------- */
-.filters { padding: 4px 0 14px; border-bottom: 1px solid var(--line); }
+.filters { padding: 0 0 10px; border-bottom: 1px solid var(--line); }
 .frow { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 .frow:first-child { margin-top: 0; }
 .flabel { color: var(--muted); font-size: .8rem; }
@@ -170,9 +170,8 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
     <header class="top">
       <div>
         <h1 id="title">Our game shelf</h1>
-        <div class="count" id="count"></div>
       </div>
-      <button class="btn" id="shareBtn" type="button">Share / QR code</button>
+      <button class="btn small" id="shareBtn" type="button">Share / QR code</button>
     </header>
   </div>
   <div class="filters">
@@ -569,8 +568,6 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
     shelf.innerHTML = "";
     if (!list.length) shelf.append(el("div", { class: "empty" }, "No games match these filters. Try removing one."));
     list.forEach((g) => shelf.append(card(g)));
-    const total = state.games.length;
-    $("count").textContent = list.length === total ? `${total} games` : `${list.length} of ${total} games`;
     $("clearBtn").hidden = !(state.player || state.times.size || state.types.size || state.tags.size || state.q);
   }
 
