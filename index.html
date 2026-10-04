@@ -132,6 +132,10 @@ select.sort { border: 2px solid var(--line); background: var(--surface); border-
 .stats svg { width: 16px; height: 16px; }
 .tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: auto; padding-top: 6px; }
 .tag { background: var(--chip); border-radius: 6px; padding: 1px 8px; font-size: .8rem; }
+.badge {
+  position: absolute; top: 10px; left: 10px; display: flex; gap: 4px; flex-wrap: wrap; z-index: 1;
+}
+.badge span { background: var(--red); color: #fff; font-weight: 700; font-size: .78rem; border-radius: 6px; padding: 2px 8px; }
 .bgg { font-size: .8rem; color: var(--blue); align-self: flex-start; }
 
 .empty { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--muted); }
@@ -202,6 +206,7 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
       <div class="frow" id="playerRow"><span class="flabel">Players</span><div class="meeples" id="players"></div></div>
       <div class="frow" id="timeRow"><span class="flabel">Time</span><div class="chips" id="times"></div></div>
       <div class="frow" id="typeRow"><span class="flabel">Type</span><div class="chips" id="types"></div></div>
+      <div class="frow" id="tagRow"><span class="flabel">Tag</span><div class="chips" id="tags"></div></div>
       <div class="frow"><button class="clear" id="clearBtn" type="button" hidden>Clear all filters</button></div>
     </div>
   </div>
@@ -216,21 +221,15 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
   <h1>Turn a Google Sheet into a game shelf</h1>
   <p class="lede">List your board games in a spreadsheet, paste its link here, and get a page your friends can filter by player count, play time, and type before game night.</p>
 
-  <ol class="steps">
-    <li>Make a Google Sheet. Put column names in row 1 (see the table below). Only <code>NAME</code> is required.</li>
-    <li>In Google Sheets, choose <b>File → Share → Publish to web</b>, pick <b>Entire document</b> and <b>Comma-separated values (.csv)</b>, then press Publish. Copy the link it gives you.<br><small>Or instead: Share → General access → “Anyone with the link” can view, and copy the normal sheet link.</small></li>
-    <li>Paste the link below to get your shelf’s address.</li>
-  </ol>
+  <p class="steps">In Google Sheets, go to <b>File → Share → Publish to web</b>, choose <b>Comma-separated values (.csv)</b>, press Publish, and paste the link below.</p>
 
   <div class="panel">
     <label for="sheetInput">Your Google Sheet link</label>
-    <input id="sheetInput" type="text" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-…/pub?output=csv" autocomplete="off">
+    <input id="sheetInput" type="text" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv" autocomplete="off">
     <label for="titleInput" style="margin-top:14px">Shelf title (optional)</label>
-    <input id="titleInput" type="text" placeholder="Kevin’s games">
+    <input id="titleInput" type="text" placeholder="Kevin's games">
     <div class="row">
       <button class="btn solid" id="makeBtn" type="button">Make my shelf link</button>
-      <button class="btn" id="demoBtn" type="button">Try the sample shelf</button>
-      <button class="btn" id="templateBtn" type="button">Download a starter CSV</button>
     </div>
     <div class="err" id="setupErr" role="alert"></div>
     <div class="result" id="setupResult" hidden>
@@ -249,17 +248,17 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
     <table>
       <thead><tr><th>Column</th><th>What to put in it</th></tr></thead>
       <tbody>
+        <tr><td><code>BGGID</code></td><td>The number in the BoardGameGeek address, e.g. 128882 for Avalon. Adds a link to the game's BGG page.</td></tr>
         <tr><td><code>NAME</code></td><td>Game name. Required. (Also accepted: 名稱)</td></tr>
-        <tr><td><code>IMAGE</code></td><td>Any picture link from any website: BGG, Imgur, Google Drive, Dropbox, GitHub, a shop page’s image… Drive, Dropbox and Imgur page links are converted automatically. (Also accepted: IMG, IMGUR, 圖片)</td></tr>
-        <tr><td><code>BGGID</code></td><td>The number in the BoardGameGeek address, e.g. 128882 for Avalon. Adds a link to the game’s BGG page.</td></tr>
         <tr><td><code>PLAYER</code></td><td><code>2-5</code>, <code>2~5</code>, <code>4</code>, <code>2,4,6</code> or <code>3+</code> (人數)</td></tr>
-        <tr><td><code>PLAYTIME</code></td><td>Minutes: <code>30-60</code>, <code>45</code>, or hours like <code>2h</code> (時間)</td></tr>
-        <tr><td><code>GAMETYPE</code></td><td>Types separated by 、 or commas: <code>派對、推理</code> (類型)</td></tr>
+        <tr><td><code>PLAYTIME</code></td><td>Minutes: <code>30-60</code>, <code>30~150</code>, <code>45</code>, or hours like <code>2h</code> (時間)</td></tr>
+        <tr><td><code>GAMETYPE</code></td><td>Types separated by 、 or commas: <code>家庭、策略</code> (類型)</td></tr>
+        <tr><td><code>IMAGE</code></td><td>Any picture link from any website: BGG, Imgur, Google Drive, Dropbox, GitHub, a shop page's image... Drive, Dropbox and Imgur page links are converted automatically. (Also accepted: IMG, 圖片)</td></tr>
         <tr><td><code>DESCRIPTION</code></td><td>A note shown under the name (備註)</td></tr>
+        <tr><td><code>TAG</code></td><td>A short label shown on the game's picture, like <code>推薦</code> or <code>New</code>. Separate several with 、 (標籤)</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="lede" style="font-size:.95rem;margin-top:24px">Commas inside cells are fine. Google caches published sheets, so edits can take about 5 minutes to appear.</p>
 </main>
 
 <dialog id="shareDialog">
@@ -350,7 +349,8 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
     bgg: ["bggid", "bgg", "bggnumber"],
     players: ["player", "players", "人數", "遊戲人數", "玩家人數"],
     time: ["playtime", "time", "duration", "時間", "遊戲時間"],
-    type: ["gametype", "type", "types", "category", "tags", "類型", "分類", "種類"],
+    type: ["gametype", "type", "types", "category", "類型", "分類", "種類"],
+    tag: ["tag", "tags", "label", "labels", "標籤"],
     desc: ["description", "desc", "note", "notes", "備註", "說明", "描述"]
   };
 
@@ -431,7 +431,8 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
         playersRaw: get("players"),
         time: parseTime(get("time")),
         types: get("type").split(/[、,，\/;；|]+/).map((t) => t.trim()).filter(Boolean),
-        desc: get("desc")
+        desc: get("desc"),
+        tags: get("tag").split(/[、,，\/;；|]+/).map((t) => t.trim()).filter(Boolean)
       };
     }).filter(Boolean);
   }
@@ -448,7 +449,7 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
     { label: "Over 2 h", a: 121, b: 99999 }
   ];
 
-  const state = { games: [], player: null, times: new Set(), types: new Set(), q: "", sort: "sheet" };
+  const state = { games: [], player: null, times: new Set(), types: new Set(), tags: new Set(), q: "", sort: "sheet" };
 
   function el(tag, attrs, ...kids) {
     const n = document.createElement(tag);
@@ -516,6 +517,12 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
     const typeList = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
     $("typeRow").hidden = !typeList.length;
     typeList.forEach((t) => types.append(toggleChip(t, state.types)));
+    // tags
+    const tagBox = $("tags");
+    tagBox.innerHTML = "";
+    const tagList = [...new Set(g.flatMap((x) => x.tags))];
+    $("tagRow").hidden = !tagList.length;
+    tagList.forEach((t) => tagBox.append(toggleChip(t, state.tags)));
   }
 
   function toggleChip(label, set) {
@@ -543,8 +550,9 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
       if (!ok) return false;
     }
     if (state.types.size && !g.types.some((t) => state.types.has(t))) return false;
+    if (state.tags.size && !g.tags.some((t) => state.tags.has(t))) return false;
     if (state.q) {
-      const hay = (g.name + " " + g.desc + " " + g.types.join(" ")).toLowerCase();
+      const hay = (g.name + " " + g.desc + " " + g.types.join(" ") + " " + g.tags.join(" ")).toLowerCase();
       if (!hay.includes(state.q)) return false;
     }
     return true;
@@ -566,11 +574,12 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
       const blur = el("div", { class: "blur" });
       blur.style.backgroundImage = `url("${g.image.replace(/"/g, "%22")}")`;
       const img = el("img", { src: g.image, alt: g.name, loading: "lazy", referrerpolicy: "no-referrer" });
-      img.addEventListener("error", () => { cover.innerHTML = ""; cover.append(placeholder(g)); });
+      img.addEventListener("error", () => { blur.remove(); img.replaceWith(placeholder(g)); });
       cover.append(blur, img);
     } else {
       cover.append(placeholder(g));
     }
+    if (g.tags.length) cover.append(el("div", { class: "badge" }, g.tags.map((t) => el("span", {}, t))));
     const stats = el("div", { class: "stats" });
     if (g.players.length) stats.append(el("span", {}, svgUse("meeple"), formatPlayers(g.players)));
     if (g.time) stats.append(el("span", {}, svgUse("clock"), formatTime(g.time)));
@@ -592,7 +601,7 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
     list.forEach((g) => shelf.append(card(g)));
     const total = state.games.length;
     $("count").textContent = list.length === total ? `${total} games` : `${list.length} of ${total} games`;
-    $("clearBtn").hidden = !(state.player || state.times.size || state.types.size || state.q);
+    $("clearBtn").hidden = !(state.player || state.times.size || state.types.size || state.tags.size || state.q);
   }
 
   /* ---------------- QR + share ---------------- */
@@ -631,7 +640,7 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
     $("search").addEventListener("input", (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
     $("sort").addEventListener("change", (e) => { state.sort = e.target.value; render(); });
     $("clearBtn").addEventListener("click", () => {
-      state.player = null; state.times.clear(); state.types.clear(); state.q = "";
+      state.player = null; state.times.clear(); state.types.clear(); state.tags.clear(); state.q = "";
       $("search").value = "";
       document.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
       refreshPressed(); render();
@@ -645,7 +654,7 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
   }
 
   function loadSheet(url, title) {
-    showStatus('<p class="empty">Loading your games…</p>');
+    showStatus('<p class="empty">Loading your games...</p>');
     Papa.parse(url, {
       download: true,
       header: true,
@@ -655,22 +664,22 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
         if (!fields.name) {
           const looksLikeHtml = (res.meta.fields || []).some((f) => /<!doctype|<html/i.test(f));
           return showError(looksLikeHtml
-            ? "Google returned a sign-in page instead of the data, so the sheet isn’t public yet."
-            : `Couldn’t find a NAME column. Row 1 has: ${(res.meta.fields || []).join(", ") || "nothing"}.`);
+            ? "Google returned a sign-in page instead of the data, so the sheet isn't public yet."
+            : `Couldn't find a NAME column. Row 1 has: ${(res.meta.fields || []).join(", ") || "nothing"}.`);
         }
         const games = rowsToGames(res.data, fields);
         if (!games.length) return showError("The sheet has a NAME column but no games in it yet.");
         startShelf(games, title);
       },
-      error: () => showError("The sheet couldn’t be downloaded. It may not be published, or the link may be wrong.")
+      error: () => showError("The sheet couldn't be downloaded. It may not be published, or the link may be wrong.")
     });
   }
 
   function showError(msg) {
     const n = el("div", { class: "notice" },
-      el("h2", {}, "This shelf can’t load"),
+      el("h2", {}, "This shelf can't load"),
       el("p", {}, msg),
-      el("p", {}, "In Google Sheets, use File → Share → Publish to web (Entire document, CSV), or set General access to “Anyone with the link can view”. Then make a new link here."),
+      el("p", {}, "In Google Sheets, use File → Share → Publish to web (Entire document, CSV), or set General access to 'Anyone with the link can view'. Then make a new link here."),
       el("a", { class: "btn solid", href: location.pathname }, "Go to setup")
     );
     $("statusView").innerHTML = "";
@@ -678,22 +687,12 @@ dialog p { word-break: break-all; font-size: .85rem; color: var(--muted); max-wi
     $("statusView").hidden = false;
   }
 
-  const SAMPLE = `NAME,IMAGE,BGGID,PLAYER,PLAYTIME,GAMETYPE,DESCRIPTION
-阿瓦隆 Avalon,,128882,5-10,30,陣營、推理、派對,"Hidden roles, best with 7+"
-Codenames,,178900,2-8,15,派對、文字,Teams of two or more
-卡卡頌 Carcassonne,,822,2-5,30-45,拼放、家庭,
-Splendor,,148228,2-4,30,引擎、家庭,Quick to teach
-Wingspan,,266192,1-5,40-70,引擎、策略,"Birds, eggs, and very pretty cards"
-The Crew,,284083,2-5,20,合作、吃墩,
-Dixit,,39856,3-8,30,派對、聯想,
-Terraforming Mars,,167791,1-5,2h,策略、引擎,Takes a full evening`;
-
   function initSetup() {
     $("setupView").hidden = false;
     $("makeBtn").addEventListener("click", () => {
       $("setupErr").textContent = "";
       const info = parseSheetInput($("sheetInput").value);
-      if (!info) { $("setupErr").textContent = "That doesn’t look like a Google Sheet link. Paste the link from Publish to web, or the sheet’s address bar."; return; }
+      if (!info) { $("setupErr").textContent = "That doesn't look like a Google Sheet link. Paste the link from Publish to web, or the sheet's address bar."; return; }
       const link = shelfLink(info, $("titleInput").value.trim());
       $("setupLink").textContent = link;
       $("openLink").href = link;
@@ -701,16 +700,6 @@ Terraforming Mars,,167791,1-5,2h,策略、引擎,Takes a full evening`;
       $("setupResult").hidden = false;
     });
     $("copyLink").addEventListener("click", (e) => copy($("openLink").href, e.target));
-    $("demoBtn").addEventListener("click", () => {
-      $("setupView").hidden = true;
-      const res = Papa.parse(SAMPLE, { header: true, skipEmptyLines: true });
-      startShelf(rowsToGames(res.data, mapHeaders(res.meta.fields)), "Sample shelf");
-    });
-    $("templateBtn").addEventListener("click", () => {
-      const blob = new Blob(["\uFEFF" + SAMPLE], { type: "text/csv;charset=utf-8" });
-      const a = el("a", { href: URL.createObjectURL(blob), download: "game-shelf-template.csv" });
-      document.body.append(a); a.click(); a.remove();
-    });
   }
 
   const csvUrl = csvUrlFromParams(params);
